@@ -1,0 +1,27 @@
+{
+    "ACSYNT": {"valid": true}, 
+    "AfricanAccentedFrench": null,
+    "LVL-Atril-CTFNN1": null,
+    "CFPB": null,
+    "CFPP2000": {"valid": true},
+    "CLAPI": null,
+    "CommonVoice": {"dataset_subpath": "COMMONVOICE", "valid": true},
+    "ESLO": null,
+    "FLEURS": {"valid": true},
+    "LesVocaux": null,
+    "LINAGORA_Meetings": {"dataset_subpath": "LINAGORA"},
+    "MLS_fr": {"dataset_subpath": "LIBRIVOX/mls_Facebook_french", "kaldi_subpath": "MLS_Facebook_french", "valid": true},
+    "OFROM": {"valid": true},
+    "PFC": null,
+    "PxSLU": {"kaldi_subpath": "PxSLU/nocasepunc_cleaned_max30"},
+    "SimSamu": null,
+    "TCOF_Adultes": {"dataset_subpath": "TCOF", "valid": true},
+    "TCOF_Enfants": {"dataset_subpath": "TCOF", "valid": true},
+    "TEDX_fr": {"dataset_subpath": "TEDX", "valid": true},
+    "VOXFORGE": null,
+    "Voxpopuli_fr": {"valid": true},
+    "YouTubeFr": {"valid": true},
+    "YODAS": {"kaldi_subpath": "YODAS/fr000"},
+    "LVL-Atril-CTFAR": null
+  }
+  

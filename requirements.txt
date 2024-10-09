@@ -1,0 +1,53 @@
+# NEMO ASR
+braceexpand
+editdistance
+einops
+g2p_en
+jiwer
+kaldi-python-io
+kaldiio
+lhotse>=1.26.0
+librosa>=0.10.0
+marshmallow
+packaging
+pyannote.core
+pyannote.metrics
+pydub
+pyloudnorm
+resampy
+ruamel.yaml
+scipy>=0.14
+soundfile
+sox
+texterrors
+
+# NEMO AUDIO
+einops
+lhotse>=1.22.0
+librosa>=0.10.0
+matplotlib
+pesq
+pystoi
+scipy>=0.14
+soundfile
+sox
+
+# NEMO COMMON
+datasets
+inflect
+pandas
+sacremoses>=0.0.43
+sentencepiece<1.0.0
+
+# NEMO CORE
+cloudpickle
+fiddle
+hydra-core>1.3,<=1.3.2
+omegaconf<=2.3
+pytorch-lightning>2.2.1
+torchmetrics>=0.11.0
+transformers
+wandb
+webdataset>=0.2.86
+
+git+https://github.com/linagora-labs/NeMo.git

@@ -1,0 +1,142 @@
+name: "finetuning"
+
+init_from_nemo_model: "~/.cache/huggingface/hub/models--nvidia--stt_fr_fastconformer_hybrid_large_pc/snapshots/4d45207544e295b077bf956e807b973f7fc428dc/stt_fr_fastconformer_hybrid_large_pc.nemo"
+
+model:
+  sample_rate: 16000
+  compute_eval_loss: false   # eval samples can be very long and exhaust memory. Disable computation of transducer loss during validation/testing with this flag.
+  log_prediction: false     # enables logging sample predictions in the output during training
+  ctc_reduction: 'mean_volume'
+  skip_nan_grad: false
+  freeze_encoder: false
+  seed: 42
+  train_ds:
+    manifest_filepath:
+    - - tarred_datasets_buckets/bucket1/tarred_audio_manifest.json
+    - - tarred_datasets_buckets/bucket2/tarred_audio_manifest.json
+    - - tarred_datasets_buckets/bucket3/tarred_audio_manifest.json
+    - - tarred_datasets_buckets/bucket4/tarred_audio_manifest.json
+    - - tarred_datasets_buckets/bucket5/tarred_audio_manifest.json
+    - - tarred_datasets_buckets/bucket6/tarred_audio_manifest.json
+    tarred_audio_filepaths:
+    - - tarred_datasets_buckets/bucket1/audio__OP_0..63_CL_.tar
+    - - tarred_datasets_buckets/bucket2/audio__OP_0..63_CL_.tar
+    - - tarred_datasets_buckets/bucket3/audio__OP_0..63_CL_.tar
+    - - tarred_datasets_buckets/bucket4/audio__OP_0..63_CL_.tar
+    - - tarred_datasets_buckets/bucket5/audio__OP_0..63_CL_.tar
+    - - tarred_datasets_buckets/bucket6/audio__OP_0..63_CL_.tar
+    sample_rate: ${model.sample_rate}
+    batch_size: 1 # must be 1 if using bucketing_batch_size
+    shuffle: true
+    num_workers: 8
+    use_lhotse: false
+    pin_memory: true
+    max_duration: 30.1
+    min_duration: 0.1
+    shuffle_n: 2048
+    # tarred datasets
+    is_tarred: true
+    # return_sample_id: True
+    bucketing_strategy: "synced_randomized" # "fixed_order" "synced_randomized" "fully_randomized"
+    bucketing_batch_size: [80, 76, 72, 68, 64, 60]
+    bucketing_weights: [1, 1, 1, 1, 1, 1] # weights for each bucket
+    shard_strategy: scatter
+
+  validation_ds:
+    manifest_filepath: manifests_v5/dev_manifest_clean.jsonl
+    sample_rate: ${model.sample_rate}
+    batch_size: 32
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+
+  test_ds:
+    manifest_filepath: null
+    sample_rate: ${model.sample_rate}
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+
+  tokenizer:    # use for spe/bpe based tokenizer models
+    update_tokenizer: false
+    dir: tokenizer_v2/tokenizer_spe_bpe_v512  # path to directory which contains either tokenizer.model (bpe) or vocab.txt (for wpe)
+    type: bpe   # Can be either bpe (SentencePiece tokenizer) or wpe (WordPiece tokenizer)
+
+  spec_augment:
+    _target_: nemo.collections.asr.modules.SpectrogramAugmentation
+    freq_masks: 2   # set to zero to disable it
+    time_masks: 10  # set to zero to disable it
+    freq_width: 27
+    time_width: 0.05
+
+  optim:
+    name: adamw
+    lr: 1e-5
+    # optimizer arguments
+    betas: [0.9, 0.98]
+    weight_decay: 1e-3
+
+    # scheduler setup
+    sched:
+      name: CosineAnnealing
+      # scheduler config override
+      warmup_steps: 10_000
+      warmup_ratio: null
+      min_lr: 1e-6
+
+trainer:
+  devices: -1 # number of GPUs, -1 would use all available GPUs
+  num_nodes: 1
+  # max_epochs: 1
+  max_steps: 100_100 # computed at runtime if not set
+  val_check_interval: 2500  # Set to 0.25 to check 4 times per epoch, or an int for number of iterations
+  # limit_val_batches: 250    # how many batches to use during validation
+  accelerator: auto
+  strategy: ddp
+  accumulate_grad_batches: 4
+  gradient_clip_val: 1.0
+  precision: bf16-mixed   # 16-mixed, 32, or bf16
+  log_every_n_steps: 50   # Interval of logging.
+  enable_progress_bar: True
+  num_sanity_val_steps: 50     # number of steps to perform validation steps for sanity check the validation process before starting the training, setting to 0 disables it
+  check_val_every_n_epoch: 1  # number of evaluations on validation every n epochs
+  sync_batchnorm: true
+  enable_checkpointing: False  # Provided by exp_manager
+  logger: false     # Provided by exp_manager
+  benchmark: false  # needs to be false for models with variable-length speech input as it slows down training
+  fast_dev_run: false
+
+
+exp_manager:
+  exp_dir: nemo_experiments
+  name: ${name}
+  create_tensorboard_logger: true
+  # create_preemption_callback: true
+  create_checkpoint_callback: true
+  create_early_stopping_callback: false
+  early_stopping_callback_params:
+    check_finite: False
+    patience: 5
+    mode: "min"
+    monitor: "val_loss"
+  checkpoint_callback_params:
+    # in case of multiple validation sets, first one is used
+    monitor: "train_loss"     # "val_wer" "train_loss"
+    mode: "min"
+    save_top_k: -1
+    always_save_nemo: true   # saves the checkpoints as nemo files along with PTL checkpoints
+    save_last: true
+    every_n_epochs: null
+    every_n_train_steps: 5_000
+    filename: training-{epoch:02d}-{step:06d}
+  resume_if_exists: true
+  resume_ignore_no_checkpoint: true
+  max_time_per_run: 00:19:45:00   # jean-zay limits to 20h jobs
+
+  create_wandb_logger: false
+  wandb_logger_kwargs:
+    name: null
+    project: null
