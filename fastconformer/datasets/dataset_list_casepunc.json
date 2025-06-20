@@ -1,15 +1,14 @@
 {
-    "ACSYNT": {"valid": true},
+    "ACSYNT": null,
     "SimSamu": null,
     "LVL-Atril-CTFNN1": null,
     "LINAGORA_Meetings": {"dataset_subpath": "LINAGORA"},
-    "MLS_fr": {"dataset_subpath": "LIBRIVOX/mls_Facebook_french", "kaldi_subpath": "MLS_Facebook_french", "valid": true},
     "PFC": null,
     "TEDX_fr": {"dataset_subpath": "TEDX", "valid": true},
+    "LVL-Atril-CTFAR": null,
     "Voxpopuli_fr": {"valid": true},
-    "YouTubeFr": {"valid": true},
-    "YODAS": {"kaldi_subpath": "YODAS/fr000"},
     "CommonVoice": {"dataset_subpath": "COMMONVOICE", "valid": true},
-    "LVL-Atril-CTFAR": null
+    "YouTubeFr": {"valid": true},
+    "YODAS": {"kaldi_subpath": "YODAS/fr000"}
   }
   
