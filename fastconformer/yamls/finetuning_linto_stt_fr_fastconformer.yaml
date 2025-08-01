@@ -62,8 +62,6 @@ model:
 
   tokenizer:    # use for spe/bpe based tokenizer models
     update_tokenizer: false
-    dir: tokenizer_v2/tokenizer_spe_bpe_v512  # path to directory which contains either tokenizer.model (bpe) or vocab.txt (for wpe)
-    type: bpe   # Can be either bpe (SentencePiece tokenizer) or wpe (WordPiece tokenizer)
 
   spec_augment:
     _target_: nemo.collections.asr.modules.SpectrogramAugmentation
