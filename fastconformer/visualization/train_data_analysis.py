@@ -16,8 +16,10 @@ datasets_names = {
     "youtubefr_split3": "YouTube",
     "youtubefr_split2": "YouTube",
     "youtubefr_split1": "YouTube",
+    "youtubefr_split0": "YouTube",
     "tcof_enfants": "TCOF",
     "tcof_adultes": "TCOF",
+    "yodas_fr000": "Yodas"
 }
 
 def hours_per_dataset(data, plot_folder, plot_name="hours_per_dataset", log=False):
@@ -65,6 +67,7 @@ def process_data(data, dict_key="name"):
         key = i[dict_key]
         if dict_key == "name":
             key = key.replace("_nocasepunc", "")
+            key = key.replace("_casepunc", "")
             key = key.replace("_max30", "")
             key = key.replace("_cleaned", "")
             key = key.replace("_eval", "")

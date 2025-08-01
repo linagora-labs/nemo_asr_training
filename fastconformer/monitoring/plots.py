@@ -22,7 +22,7 @@ def make_data_plots(data, output_dir):
     plt.savefig(os.path.join(output_dir, "hours_subset.png"), bbox_inches='tight')
     plt.close()
     
-def make_curve(wers, output_dir, lims=(0, 100), x_scale='linear', datasets_to_plot=None, plot_name_suffix="", cer=False):
+def make_curve(wers, output_dir, lims=(0, 100), x_scale='linear', datasets_to_plot=None, plot_name_suffix="", cer=False, nocasepunc=False):
     if plot_name_suffix:
         plot_name_suffix = "_" + plot_name_suffix
     os.makedirs(output_dir, exist_ok=True)
@@ -39,8 +39,6 @@ def make_curve(wers, output_dir, lims=(0, 100), x_scale='linear', datasets_to_pl
         for part in checkpoint.split("-"):
             if part.startswith("step="):
                 step = int(part.replace("step=", ""))/1000
-                if checkpoint.startswith("retraining"):
-                    step = None
                 break
         if step is None:
             step = 0
@@ -53,7 +51,8 @@ def make_curve(wers, output_dir, lims=(0, 100), x_scale='linear', datasets_to_pl
         plt.plot(data_points.keys(), [v[dataset]['wer'] for v in data_points.values()], label=dataset, color=COLORS[i])
         last_step_value = data_points[max(data_points.keys())]
         if last_step_value[dataset]['wer'] < lims[1] and x_scale != "log":
-            plt.text(max(data_points.keys())+10, last_step_value[dataset]['wer']+lims[1]*0.01*3, f"{last_step_value[dataset]['wer']:.1f}%", ha='right', va='center', color=COLORS[i])
+            # plt.text(max(data_points.keys())+10, last_step_value[dataset]['wer']+lims[1]*0.01*3, f"{last_step_value[dataset]['wer']:.1f}%", ha='right', va='center', color=COLORS[i])
+            plt.text(x_max+x_max/6, last_step_value[dataset]['wer']+lims[1]*0.01*3, f"{last_step_value[dataset]['wer']:.1f}%", ha='right', va='center', color=COLORS[i])
         if dataset in whisper_values:
             plt.axhline(y=whisper_values[dataset], color=COLORS[i], linestyle='--', label=f"Whisper on {dataset}")
             # write value on y axis
@@ -67,18 +66,18 @@ def make_curve(wers, output_dir, lims=(0, 100), x_scale='linear', datasets_to_pl
     plt.title(f"{'WER' if not cer else 'CER'} evolution during training")
     # make a legend with the dataset names
     plt.legend(loc='upper left', bbox_to_anchor=(1.1, 1))
-    plt.savefig(os.path.join(output_dir, f"{'wer' if not cer else 'cer'}_curve_lim{lims[1]}_x{x_scale}{plot_name_suffix}.png"), bbox_inches='tight')
+    plt.savefig(os.path.join(output_dir, f"{'wer' if not cer else 'cer'}_{'nocasepunc' if nocasepunc else 'casepunc'}_curve_lim{lims[1]}_x{x_scale}{plot_name_suffix}.png"), bbox_inches='tight')
     plt.close()
 
-def make_wer_plots(wers, output_dir, lims=(0, 100), cer=False):
+def make_wer_plots(wers, output_dir, lims=(0, 100), cer=False, nocasepunc=False):
     os.makedirs(output_dir, exist_ok=True)
     per_checkpoint = dict()
     for checkpoint, wers in wers.items():
         checkpoint = os.path.basename(os.path.splitext(checkpoint)[0])
         sub_dir = os.path.join(output_dir, checkpoint)
         os.makedirs(sub_dir, exist_ok=True)
-        plot_wer(wers, title=f"{'WER' if not cer else 'CER'} on {checkpoint}", show=os.path.join(sub_dir, f"{'wer' if not cer else 'cer'}.png"), sort_best=0, label_rotation=45, ymax=100)
-        plot_wer(wers, title=f"{'WER' if not cer else 'CER'} on {checkpoint}", show=os.path.join(sub_dir, f"{'wer' if not cer else 'cer'}_lim50.png"), sort_best=0, label_rotation=45, ymax=50)
+        plot_wer(wers, title=f"{'WER' if not cer else 'CER'} on {checkpoint}", show=os.path.join(sub_dir, f"{'wer' if not cer else 'cer'}.png"), sort_best=0, label_rotation=45, scale=1, ymax=100)
+        plot_wer(wers, title=f"{'WER' if not cer else 'CER'} on {checkpoint}", show=os.path.join(sub_dir, f"{'wer' if not cer else 'cer'}_lim50.png"), sort_best=0, label_rotation=45, scale=1, ymax=50)
         # mean = np.mean([v for v in wers.values()])
         # std = np.std([v for v in wers.values()])
         # median = np.median([v for v in wers.values()])
@@ -91,26 +90,26 @@ def make_wer_plots(wers, output_dir, lims=(0, 100), cer=False):
     plt.ylim(lims)
     plt.xticks(rotation=40, ha='right') 
     plt.title(f"{'WER' if not cer else 'CER'} distribution")
-    plt.savefig(os.path.join(output_dir, f"{'wer' if not cer else 'cer'}_bars_lim{lims[1]}.png"), bbox_inches='tight')
+    plt.savefig(os.path.join(output_dir, f"{'wer' if not cer else 'cer'}_{'nocasepunc' if nocasepunc else 'casepunc'}_bars_lim{lims[1]}.png"), bbox_inches='tight')
     plt.close()
 
 
-def plot_results(results, plot_folder, cer=False):
-    make_wer_plots(results, plot_folder, cer=cer)
+def plot_results(results, plot_folder, cer=False, nocasepunc=False):
+    make_wer_plots(results, plot_folder, cer=cer, nocasepunc=nocasepunc)
     try:
-        make_curve(results, plot_folder, cer=cer)
-        make_curve(results, plot_folder, (0,50), cer=cer)
-        make_curve(results, plot_folder, (0,100), 'log', cer=cer)
-        make_curve(results, plot_folder, (0,50), 'log', cer=cer)
+        make_curve(results, plot_folder, cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,50), cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,100), 'log', cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,50), 'log', cer=cer, nocasepunc=nocasepunc)
         reduced_datasets = ['youtube', 'mls', 'eslo', 'voxpopuli', 'fleurs', 'africanaccentedfrench', 'cfpp2000']
-        make_curve(results, plot_folder, datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer)
-        make_curve(results, plot_folder, (0,50), datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer)
-        make_curve(results, plot_folder, (0,100), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer)
-        make_curve(results, plot_folder, (0,50), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer)
+        make_curve(results, plot_folder, datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,50), datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,100), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,50), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="main-datasets", cer=cer, nocasepunc=nocasepunc)
         reduced_datasets = ['bref', 'ester', 'summ-re']
-        make_curve(results, plot_folder, datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer)
-        make_curve(results, plot_folder, (0,50), datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer)
-        make_curve(results, plot_folder, (0,100), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer)
-        make_curve(results, plot_folder, (0,50), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer)
+        make_curve(results, plot_folder, datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,50), datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,100), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer, nocasepunc=nocasepunc)
+        make_curve(results, plot_folder, (0,50), 'log', datasets_to_plot=reduced_datasets, plot_name_suffix="notseen-datasets", cer=cer, nocasepunc=nocasepunc)
     except Exception as e:
         logger.error(f"Error while making curve: {e}")
