@@ -1,6 +1,6 @@
-name: "finetuning"
+name: "linto_stt_fr_fastconformer"
 
-init_from_nemo_model: "~/.cache/huggingface/hub/models--nvidia--stt_fr_fastconformer_hybrid_large_pc/snapshots/4d45207544e295b077bf956e807b973f7fc428dc/stt_fr_fastconformer_hybrid_large_pc.nemo"
+init_from_nemo_model: "nvidia/stt_fr_fastconformer_hybrid_large_pc"
 
 model:
   sample_rate: 16000
@@ -125,14 +125,14 @@ exp_manager:
     monitor: "train_loss"     # "val_wer" "train_loss"
     mode: "min"
     save_top_k: -1
-    always_save_nemo: true   # saves the checkpoints as nemo files along with PTL checkpoints
+    always_save_nemo: true
     save_last: true
     every_n_epochs: null
     every_n_train_steps: 5_000
     filename: training-{epoch:02d}-{step:06d}
   resume_if_exists: true
   resume_ignore_no_checkpoint: true
-  max_time_per_run: 00:19:45:00   # jean-zay limits to 20h jobs
+  max_time_per_run: 00:19:45:00
 
   create_wandb_logger: false
   wandb_logger_kwargs:

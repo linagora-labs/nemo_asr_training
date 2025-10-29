@@ -1,18 +1,14 @@
-from eval import load_manifest, logger, datasets_names
+from eval import load_manifest, logger
 import argparse
 import json
 import os
-import nemo.collections.asr as nemo_asr
 from tqdm import tqdm
-from linastt.utils.wer import compute_wer, plot_wer
+from linastt.utils.wer import compute_wer
 from linastt.utils.text import format_text_latin
-from linastt.utils.audio import get_audio_duration
-from faster_whisper import WhisperModel, BatchedInferencePipeline
-from matplotlib import pyplot as plt
+from faster_whisper import WhisperModel
 import pydub
-import numpy as np
 
-converted_folder = "/mnt/d/datasets/converted"
+converted_folder = "converted_audios"
 
 import logging
 logging.getLogger('faster_whisper').setLevel(logging.ERROR)
@@ -71,7 +67,6 @@ def compute_model_wer(model_path, data: dict, output_dir):
                     f.write(json.dumps(row) + "\n")
                     predictions.append(row["prediction"])
                     transcriptions.append(row["text"])
-        # results[d] = compute_wer(transcriptions, predictions, use_percents=True)
         saved_path = os.path.join(output_dir, "saved", os.path.basename(os.path.splitext(model_path)[0]), f"{'cer' if CER else 'wer'}_{d}.json")
         if not os.path.exists(saved_path):
             try:

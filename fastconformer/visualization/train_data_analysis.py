@@ -10,15 +10,33 @@ logger = logging.getLogger(__name__)
 
 datasets_names = {
     "mls_facebook_french": "MLS",
+    "multilingual_librispeech": "MLS",
+    "multilingual_tedx": "mTEDx",
     "youtubefr_split6": "YouTube",
     "youtubefr_split5": "YouTube",
     "youtubefr_split4": "YouTube",
     "youtubefr_split3": "YouTube",
     "youtubefr_split2": "YouTube",
     "youtubefr_split1": "YouTube",
+    "youtubefr_split0": "YouTube",
     "tcof_enfants": "TCOF",
     "tcof_adultes": "TCOF",
+    "yodas_fr000": "Yodas"
 }
+
+def get_name(dataset_name):
+    dataset_name = dataset_name.replace("_recasepunc", "")
+    dataset_name = dataset_name.replace("_nocasepunc", "")
+    dataset_name = dataset_name.replace("_casepunc", "")
+    dataset_name = dataset_name.replace("_max30", "")
+    dataset_name = dataset_name.replace("_cleaned", "")
+    dataset_name = dataset_name.replace("_eval", "")
+    dataset_name = dataset_name.replace("_test", "")
+    dataset_name = dataset_name.replace("_train", "")
+    dataset_name = dataset_name.replace("_devtest", "")
+    if dataset_name.lower() in datasets_names:
+        dataset_name = datasets_names[dataset_name.lower()]
+    return dataset_name
 
 def hours_per_dataset(data, plot_folder, plot_name="hours_per_dataset", log=False):
     plt.figure(figsize=(10, 5))
@@ -61,17 +79,12 @@ def process_data(data, dict_key="name"):
     data_sorted = dict()
     for i in tqdm(data, desc="Grouping by dataset"):
         if dict_key not in i:
-            raise ValueError(f"Key {dict_key} not found in data")
+            if dict_key=="name":
+                dict_key = "dataset_name"
+            else:
+                raise ValueError(f"Key {dict_key} not found in data")
         key = i[dict_key]
-        if dict_key == "name":
-            key = key.replace("_nocasepunc", "")
-            key = key.replace("_max30", "")
-            key = key.replace("_cleaned", "")
-            key = key.replace("_eval", "")
-            key = key.replace("_test", "")
-            key = key.replace("_devtest", "")
-        if key.lower() in datasets_names:
-            key = datasets_names[key.lower()]
+        key = get_name(key)
         if key not in data_sorted:
             data_sorted[key] = list()
         data_sorted[key].append(i)
@@ -104,6 +117,66 @@ def apply_upsampling(data):
             new_data.append(d)
     return new_data
 
+def make_hists(data, dataset=None, plot_folder=None):
+    durations = list()
+    for i in tqdm(data, desc="Computing durations"):
+        if dataset and dataset==get_name(i["dataset_name"]):
+            durations.append(i["duration"])
+        elif dataset is None:
+            durations.append(i["duration"])
+    output_folder = plot_folder
+    if dataset:
+        output_folder = os.path.join(plot_folder, dataset)
+    os.makedirs(output_folder, exist_ok=True)
+    plt.figure(figsize=(10, 5))
+    plt.hist(durations, bins=100, log=True)
+    plt.xlabel("Duration (s)")
+    plt.ylabel("Number of samples (log)")
+    plt.title("Distribution of durations for training")
+    plt.savefig(os.path.join(output_folder, "durations_hist_log.png"), bbox_inches='tight')
+    plt.close()
+    plt.figure(figsize=(10, 5))
+    plt.hist(durations, bins=100, log=False)
+    plt.xlabel("Duration (s)")
+    plt.ylabel("Number of samples")
+    plt.title("Distribution of durations for training")
+    plt.savefig(os.path.join(output_folder, "durations_hist.png"), bbox_inches='tight')
+    plt.close()
+
+def make_punc_plot(data, dataset=None, plot_folder=None):
+    import string
+    from collections import Counter
+    punctuations = string.punctuation  # !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+    punct_counter = Counter()
+
+    for item in tqdm(data, desc="Counting punc"):
+        text = item.get("text", "")
+        for char in text:
+            if char in punctuations:
+                punct_counter[char] += 1
+    # Sort for prettier plotting
+    punct_counter = dict(sorted(punct_counter.items()))
+    output_folder = plot_folder
+    if dataset:
+        output_folder = os.path.join(plot_folder, dataset)
+    os.makedirs(output_folder, exist_ok=True)
+    # Plot
+    plt.figure(figsize=(10,5))
+    bars = plt.bar(punct_counter.keys(), punct_counter.values())    
+    plt.title("Number of punctuation marks")
+    plt.xlabel("Punctuation")
+    plt.ylabel("Count")
+    for bar in bars:
+        height = int(bar.get_height())
+        plt.text(
+            bar.get_x() + bar.get_width()/2,  # X position (center of the bar)
+            height + 0.1,                     # Y position (slightly above the bar)
+            f'{height//1000}k',                 # Text label
+            ha='center', va='bottom', fontsize=10
+        )
+    plt.savefig(os.path.join(output_folder, "punctuations.png"), bbox_inches='tight')
+    plt.close()
+
 plot_folder = "plots"
 
 if __name__ == "__main__":
@@ -135,6 +208,8 @@ if __name__ == "__main__":
             with open(args.manifest, "r", encoding="utf-8") as f:
                 for line in tqdm(f):
                     json_data = json.loads(line)
+                    if "dataset_name" not in json_data:
+                        json_data["dataset_name"] = json_data["name"]
                     data.append(json_data)
                     
         return data, buckets
@@ -143,30 +218,23 @@ if __name__ == "__main__":
     
     plot_folder = os.path.join(args.output_dir, plot_folder)
     os.makedirs(plot_folder, exist_ok=True)
-    
+    make_hists(data, plot_folder=plot_folder)
+    make_punc_plot(data, plot_folder=plot_folder)
+    if "name" in data[0]:
+        datasets = set([d["name"] for d in data])
+    else:
+        datasets = set([d["dataset_name"] for d in data])
+    datasets = set([get_name(d) for d in datasets])
+    for dataset in datasets:
+        make_hists(data, dataset, plot_folder=plot_folder)
     data_per_dataset, hours = process_data(data, "name")
+    logger.info(f"Plotting hours per dataset in {plot_folder}")
     hours_per_dataset(hours, plot_folder)
     hours_per_dataset(hours, plot_folder, log=True)
     hours_per_dataset_pie(hours, plot_folder)
 
-    durations = list()
-    for i in tqdm(data, desc="Computing durations"):
-        durations.append(i["duration"])
-    plt.figure(figsize=(10, 5))
-    plt.hist(durations, bins=100, log=True)
-    plt.xlabel("Duration (s)")
-    plt.ylabel("Number of samples (log)")
-    plt.title("Distribution of durations for training")
-    plt.savefig(os.path.join(plot_folder, "durations_hist_log.png"), bbox_inches='tight')
-    plt.close()
-    plt.figure(figsize=(10, 5))
-    plt.hist(durations, bins=100, log=False)
-    plt.xlabel("Duration (s)")
-    plt.ylabel("Number of samples")
-    plt.title("Distribution of durations for training")
-    plt.savefig(os.path.join(plot_folder, "durations_hist.png"), bbox_inches='tight')
-    plt.close()
-    
+
+    logger.info(f"Finished with training data analysis")
     if buckets:
         data_per_bucket, hours = process_data(data, "bucket")
         hours_per_dataset(hours, plot_folder, "hours_per_bucket")
