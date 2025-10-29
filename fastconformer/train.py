@@ -56,7 +56,7 @@ def main(cfg):
         asr_model.encoder.freeze()
         logging.info("Encoder is frozen")
     else:
-        logging.info("Enocer is not frozen")
+        logging.info("Encoder is not frozen")
     asr_model.wer.log_prediction=False
     # asr_model = torch.compile(asr_model)
     trainer.fit(asr_model)
