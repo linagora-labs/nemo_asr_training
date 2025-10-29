@@ -26,8 +26,6 @@ if __name__ == "__main__":
     parser.add_argument('--output_manifest', help="Output directory", type=str, default="manifests/test_manifest_subsampled.jsonl")
     args = parser.parse_args()
     
-
-
     data = load_manifest(args.manifest, None)
 
     new_data = dict()

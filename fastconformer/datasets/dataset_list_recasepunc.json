@@ -1,0 +1,27 @@
+{
+    "ACSYNT": null,
+    "SimSamu": null,
+    "LVL-Atril-CTFNN1": null,
+    "LINAGORA_Meetings": {"dataset_subpath": "LINAGORA"},
+    "PFC": null,
+    "FLEURS": {"valid": true, "test": true},
+    "LVL-Atril-CTFAR": {"check_if_in_audio": true},
+    "VoxPopuli": {"valid": true, "test": true, "concat_segments": false},
+    "AfricanAccentedFrench": null,
+    "CFPB": null,
+    "CFPP2000": {"valid": true},
+    "CLAPI": null,
+    "ESLO": null,
+    "LesVocaux": null,
+    "OFROM": {"valid": true},
+    "PxSLU": {"kaldi_subpath": "PxSLU/recasepunc_max30"},
+    "TCOF_Adultes": {"dataset_subpath": "TCOF", "valid": true},
+    "TCOF_Enfants": {"dataset_subpath": "TCOF", "valid": true},
+    "TEDX": {"kaldi_subpath": "Multilingual_TEDx", "valid": true, "test": true, "concat_segments": false},
+    "VoxForge": null,
+    "MLS": {"dataset_subpath": "LIBRIVOX/mls_Facebook_french", "kaldi_subpath": "Multilingual_LibriSpeech", "valid": true},
+    "CommonVoice": {"dataset_subpath": "COMMONVOICE", "valid": true, "test": true},
+    "YODAS": {"check_audio": false, "remove_incoherent_texts": true, "concat_segments": true},
+    "YouTubeFr": {"valid": true, "test": true, "remove_incoherent_texts": true, "concat_segments": false}
+  }
+  

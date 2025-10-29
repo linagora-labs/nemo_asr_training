@@ -52,7 +52,11 @@ def main(cfg):
     # Setup SpecAug
     if hasattr(cfg.model, 'spec_augment') and cfg.model.spec_augment is not None:
         asr_model.spec_augment = ASRModel.from_config_dict(cfg.model.spec_augment)
-
+    if hasattr(cfg.model, 'freeze_encoder') and cfg.model.freeze_encoder:
+        asr_model.encoder.freeze()
+        logging.info("Encoder is frozen")
+    else:
+        logging.info("Encoder is not frozen")
     asr_model.wer.log_prediction=False
     # asr_model = torch.compile(asr_model)
     trainer.fit(asr_model)
