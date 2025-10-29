@@ -24,8 +24,6 @@ WER_WHISPER_PER_DATASET = {
     "MLS": 5.1,
     "CFPP2000": 50.7,
     "AfricanAccentedFrench": 6.9,
-    "BREF": 9.2,
-    "ESTER": 11.3,
     "MLS": 5,
     "OFROM": 39.7,
     "SUMM-RE": 29.9,

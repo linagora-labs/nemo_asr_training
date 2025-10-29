@@ -1,5 +1,5 @@
 import argparse
-from eval import load_manifest, logger, datasets_names
+from eval import load_manifest
 from sklearn.model_selection import train_test_split
 from linastt.utils.text import format_text_latin
 import json
@@ -7,9 +7,6 @@ import json
 
 subsample = {
     "commonvoice": 1000,
-    "bref": 1000,
-    "epac": 0,
-    "ester": 1000,
     "mls": 500,
     "summ-re": 1000,
     "voxpopuli": 1000,
@@ -20,7 +17,7 @@ def write_manifest(data, path):
     with open(path, 'w') as f:
         for d in data:
             for row in data[d]:
-                row['text'] = format_text_latin(row['text'], lang='fr')
+                row['text'] = format_text_latin(row['text'], lang='fr+')
                 f.write(json.dumps(row) + '\n')
 
 if __name__ == "__main__":
